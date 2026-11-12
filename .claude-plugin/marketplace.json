@@ -1,0 +1,20 @@
+{
+  "name": "menhirworks",
+  "owner": {
+    "name": "Paul Laffitte",
+    "url": "https://github.com/plaffitt"
+  },
+  "metadata": {
+    "description": "Claude Code plugins by Menhir Works"
+  },
+  "plugins": [
+    {
+      "name": "tmux-pilot",
+      "source": {
+        "source": "github",
+        "repo": "plaffitt/tmux-pilot"
+      },
+      "description": "Lets Claude drive your tmux panes safely, with clear signs of who is typing"
+    }
+  ]
+}
