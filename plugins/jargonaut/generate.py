@@ -13,6 +13,7 @@ $XDG_CONFIG_HOME/vocalinux/custom-dictionary-corrections.json (see paths.py
 for the overrides).
 """
 
+import argparse
 import json
 import os
 import sys
@@ -73,10 +74,13 @@ def write_atomic(path, content):
 
 
 def main(argv):
+    parser = argparse.ArgumentParser(description="Write Vocalinux's corrections from vocab.toml.")
+    parser.add_argument("--check", action="store_true", help="exit 1 if the file on disk is out of date, write nothing")
+    args = parser.parse_args(argv)
     vocab, corrections_path = paths.vocab(), paths.corrections()
     data = build_corrections(load_terms(vocab))
     content = render(data)
-    if "--check" in argv:
+    if args.check:
         current = corrections_path.read_text(encoding="utf-8") if corrections_path.exists() else ""
         if current != content:
             print(f"{corrections_path} is out of date, run {Path(__file__).name}", file=sys.stderr)
