@@ -13,7 +13,7 @@ microphone → Parakeet → deterministic corrections → Haiku hook → typed t
 1. **Deterministic corrections**: Vocalinux replaces known misrecognitions itself, from `~/.config/vocalinux/custom-dictionary-corrections.json`. Matching is case-insensitive and word-bounded, longest match first, at most 500 entries, reloaded on every segment. Only forms that can never be ordinary text go there.
 2. **Haiku pass**: Vocalinux pipes each segment to `haiku/postproc_hook.py` (Settings > Post-processing > script path). The hook asks a local daemon that keeps a Claude Haiku session open through the logged-in `claude` CLI. Haiku fixes the remaining vocabulary errors and evident mistakes only, using the whole vocabulary (ambiguous forms included) as context.
 
-The plugin has no Claude Code skill: it lives in this marketplace as a home for the code, and runs on its own next to Vocalinux.
+The plugin ships 2 Claude Code skills, so that a Claude Code user only installs it and talks: `/jargonaut:install` sets everything up (directories, vocabulary seeded from your own repositories and prompts, stable link, service), and `/jargonaut:learn` runs calibration rounds as a conversation. The daemon and the hook run on their own next to Vocalinux, from the stable link, not from Claude Code.
 
 ## Layout
 
