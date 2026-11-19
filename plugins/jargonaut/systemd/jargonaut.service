@@ -3,8 +3,8 @@ Description=jargonaut daemon (Haiku post-processing for Vocalinux dictation)
 
 [Service]
 Type=simple
-# The launcher written by launchers.py: this unit does not change when the
-# plugin moves or is updated, only the launcher does.
+# The launcher written by install.py; it runs the installed runtime in
+# ~/.local/share/jargonaut/app, so this unit never changes.
 ExecStart=%h/.local/bin/jargonaut-daemon
 # ~/.local/bin first, so the claude CLI is found.
 Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
