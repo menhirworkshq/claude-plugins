@@ -2,6 +2,11 @@ name: Conform
 
 on:
   pull_request:
+  # Direct pushes to main skip pull requests: lint them after the fact, so a bad commit is at
+  # least reported.
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -15,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
 
       - name: Setup Go
@@ -30,6 +35,7 @@ jobs:
 
       # A review fix left as a fixup!, squash! or amend! commit would land as is: say how to fold it.
       - name: Look for unfolded review fixes
+        if: github.event_name == 'pull_request'
         env:
           BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
@@ -43,5 +49,18 @@ jobs:
       - name: Check the commit scopes
         run: task check-scopes
 
+      # A pull request is linted since its base branch, a push since the commit main was at before
+      # it (the first commit when the push created main).
       - name: Lint commits
-        run: task conform BASE_BRANCH=origin/${{ github.event.pull_request.base.ref }}
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.ref }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            base="origin/$PR_BASE"
+          elif [ -z "${PUSH_BEFORE//0/}" ]; then
+            base=$(git rev-list --max-parents=0 HEAD)
+          else
+            base="$PUSH_BEFORE"
+          fi
+          task conform BASE_BRANCH="$base"
