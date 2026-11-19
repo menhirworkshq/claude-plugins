@@ -13,7 +13,7 @@ Below, `J` is the stable link `~/.local/share/jargonaut/current`, and the plugin
 
 ## Ground rules
 
-- Never open a file that may hold a secret: `~/.config/vocalinux/config.json` holds an API key, and `.env`, `*.key`, `*secret*`, `*token*`, `*credential*` files are off limits.
+- Never open a file that may hold a secret: `~/.config/vocalinux/config.json` holds an API key (only `set_hook.py` touches it), and `.env`, `*.key`, `*secret*`, `*token*`, `*credential*` files are off limits.
 - Seeding reads the user's own sources only to extract term candidates: never print or quote their lines (shell history and past prompts can hold pasted credentials).
 - Say what you are about to change before each write outside the 3 jargonaut directories.
 
@@ -85,11 +85,21 @@ If the unit was already enabled before the link changed, run `systemctl --user r
 
 ## Step 7: connect Vocalinux
 
-Vocalinux has no command to set the post-processing script, and its config file holds a secret, so this is the one step the user does:
+Vocalinux reads its `config.json` once at start and rewrites it whole on every save, so the change is made while it is stopped. The file holds an API key: never open it yourself, `set_hook.py` changes only the script path and prints nothing else.
 
-> In Vocalinux, open Settings > Post-processing and set the script path to `<absolute path of ~/.local/share/jargonaut/current/haiku/postproc_hook.py>`.
+1. Ask the user to quit Vocalinux (tray icon > Quit).
+2. Run `python3 ~/.local/share/jargonaut/current/set_hook.py` (`--hook PATH` when the hook lives elsewhere).
 
-Print the absolute path, expanded, ready to paste. Then ask the user to dictate 1 sentence and check that a new line appears in `~/.local/state/jargonaut/haiku-$(date +%F).jsonl`.
+| Exit code | Meaning | Next |
+|---|---|---|
+| 0 | Script path set, or already set | Step 3 |
+| 3 | Another script path is set; the script printed it | Show it to the user and ask whether to replace it; only on a yes, run again with `--force` |
+| 4 | Vocalinux still runs | Ask the user to quit it, then run again |
+| 1 | No config yet, or not valid JSON | Ask the user to open Vocalinux's Settings once and quit; never repair the file yourself |
+
+3. Ask the user to start Vocalinux again, then to dictate 1 sentence, and check that a new line appears in `~/.local/state/jargonaut/haiku-$(date +%F).jsonl`.
+
+The script also lists the names of the other `post_processing` settings (for example `enabled`). If post-processing looks disabled, tell the user to enable it in Settings > Post-processing.
 
 ## Step 8: hand over
 
