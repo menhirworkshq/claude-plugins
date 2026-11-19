@@ -44,7 +44,6 @@ Your files:
 | `~/.config/jargonaut/live` | Flag file: present means live mode |
 | `~/.local/share/jargonaut/calibration/` | Read-aloud rounds: `roundN.ref.txt` (text read), `roundN.raw.txt` (recognizer output, corrections paused) or `roundN.live.txt` (read with corrections active) |
 | `~/.local/share/jargonaut/eval-checks.toml` | What `eval.py` expects for each sentence of the rounds, plus adversarial segments |
-| `~/.local/share/jargonaut/results.md` | Your evaluation notes |
 | `~/.local/state/jargonaut/haiku-YYYY-MM-DD.jsonl` | One log line per segment |
 | `~/.local/state/jargonaut/prompt.md` | The prompt the daemon built and uses |
 | `$XDG_RUNTIME_DIR/jargonaut.sock` | Daemon socket (mode 600) |

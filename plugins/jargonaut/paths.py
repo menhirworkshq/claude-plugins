@@ -5,7 +5,7 @@ The code lives in the plugin folder; everything personal lives outside it:
   config  $JARGONAUT_CONFIG_DIR or $XDG_CONFIG_HOME/jargonaut (~/.config/jargonaut)
           vocab.toml, prompt.toml (personal prompt parts), the `live` flag file
   data    $JARGONAUT_DATA_DIR or $XDG_DATA_HOME/jargonaut (~/.local/share/jargonaut)
-          calibration/ rounds, eval-checks.toml, results.md
+          calibration/ rounds, eval-checks.toml
   state   $JARGONAUT_STATE_DIR or $XDG_STATE_HOME/jargonaut (~/.local/state/jargonaut)
           the hook logs (haiku-YYYY-MM-DD.jsonl) and the generated prompt.md
   socket  $JARGONAUT_SOCKET or $XDG_RUNTIME_DIR/jargonaut.sock
