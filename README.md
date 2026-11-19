@@ -18,7 +18,7 @@ Claude Code plugins by Menhir Works.
 
 ## Layout
 
-Each plugin lives in its own folder, `plugins/<name>/`, with its `.claude-plugin/plugin.json` and its own version, and is listed in `.claude-plugin/marketplace.json` with a `./plugins/<name>` source:
+Each plugin lives in its own folder, `plugins/<name>/`, with its `.claude-plugin/plugin.json`, and is listed in `.claude-plugin/marketplace.json` with a `./plugins/<name>` source:
 
 ```
 .claude-plugin/marketplace.json
@@ -30,6 +30,8 @@ plugins/
     README.md
 ```
 
+Plugins of this repository set no `version`, in `plugin.json` or in `marketplace.json`: an installed plugin then follows the commits of the marketplace (its version is the commit SHA), instead of staying on a cached copy until someone bumps a number. `task check-versions` enforces it. A plugin that moves to a repository of its own may start versioning there.
+
 A plugin moves to a repository of its own only once it is mature and draws outside interest; the marketplace then lists it with a `github` source, as it does for tmux-pilot.
 
 ## Commits
@@ -40,7 +42,7 @@ Adding a plugin means adding its name to the `scopes` of `.conform.yaml` too; `t
 
 ## Development
 
-Run `lefthook install` after cloning, before your first commit: the hooks check every commit message. [`CONTRIBUTING.md`](./CONTRIBUTING.md) lists the tools they need and the rules.
+Run `lefthook install` after cloning, before your first commit: the hooks check every commit message. [`CONTRIBUTING.md`](./CONTRIBUTING.md) lists the tools they need, the rules and how to try a change to a plugin.
 
 ## License
 

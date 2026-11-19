@@ -16,10 +16,15 @@ pre-commit:
         - ".conform.yaml"
         - ".claude-plugin/marketplace.json"
 
+# The same checks as task check, with validate skipped where the claude CLI is missing.
 pre-push:
   jobs:
-    - name: check that each commit touches 1 plugin at most
-      run: task check-commits
+    - name: validate the marketplace and plugins
+      run: task validate
+      skip:
+        - run: "! command -v claude"
+    - name: run the other checks
+      run: task check-scopes check-versions check-commits test
 
 commit-msg:
   jobs:

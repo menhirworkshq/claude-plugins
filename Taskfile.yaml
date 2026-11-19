@@ -11,6 +11,58 @@ vars:
   BASE_BRANCH: '{{.BASE_BRANCH | default "origin/main"}}'
 
 tasks:
+  check:
+    desc: Run every check of the marketplace, its plugins and the commits since BASE_BRANCH (the pre-push hook runs them)
+    cmds:
+      - task: validate
+      - task: check-scopes
+      - task: check-versions
+      - task: check-commits
+      - task: test
+
+  test:
+    desc: Run the tests of every plugin that has a Taskfile.yaml with a test task
+    silent: true
+    cmds:
+      - |
+        for p in plugins/*/; do
+          [ -f "$p/Taskfile.yaml" ] || continue
+          echo "== ${p%/}"
+          task -d "$p" test || exit 1
+        done
+
+  check-versions:
+    desc: Check that no plugin of this repository sets a version (needs jq)
+    silent: true
+    cmds:
+      - |
+        status=0
+        for f in plugins/*/.claude-plugin/plugin.json; do
+          if jq -e 'has("version")' "$f" >/dev/null; then echo "$f sets a version" >&2; status=1; fi
+        done
+        bad=$(jq -r '.plugins[] | select((.source | type) == "string" and has("version")) | .name' .claude-plugin/marketplace.json)
+        if [ -n "$bad" ]; then echo "marketplace.json sets a version for: $bad" >&2; status=1; fi
+        if [ $status -ne 0 ]; then
+          echo "Plugins of this repository follow its commits: remove the version field." >&2
+        fi
+        exit $status
+
+  dev:
+    desc: 'Start a claude session on the plugins of this checkout, for example from a worktree: task dev -- jargonaut (no name loads every plugin)'
+    silent: true
+    interactive: true
+    cmds:
+      - |
+        set -- {{.CLI_ARGS}}
+        if [ $# -eq 0 ]; then set -- $(ls plugins); fi
+        args=""
+        for p in "$@"; do
+          [ -d "plugins/$p" ] || { echo "no plugin plugins/$p" >&2; exit 1; }
+          claude plugin validate "plugins/$p" >/dev/null || { claude plugin validate "plugins/$p"; exit 1; }
+          args="$args --plugin-dir {{.ROOT_DIR}}/plugins/$p"
+        done
+        exec claude $args
+
   validate:
     desc: Validate the marketplace manifest and every plugin under plugins/ (needs the claude CLI)
     cmds:

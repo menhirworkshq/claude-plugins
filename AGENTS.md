@@ -20,5 +20,7 @@ Never commit with `--no-verify`, and never work around a hook failure: fix the m
 
 - A plugin lives in `plugins/<name>/` with `.claude-plugin/plugin.json`.
 - Adding one also adds its entry to `.claude-plugin/marketplace.json` and its name to the `scopes` of `.conform.yaml`, in the same commit.
-- Run `task validate` and `task check-scopes` before committing.
-- Never commit personal data, secrets, or a user's vocabulary, logs or recordings.
+- Plugins set no `version` (`task check-versions`).
+- Work in a worktree on a branch, never in the main checkout. To try a change, the user starts `task dev -- <plugin>` from the worktree (a running session cannot load a plugin directory); after each edit, they run `/reload-plugins`.
+- Run `task check` before saying a change is done.
+- Never commit personal data, secrets, or a user's vocabulary, transcripts, logs or recordings, nor client or employer names. Personal data stays in the XDG dirs the plugins document.
