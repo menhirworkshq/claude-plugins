@@ -1,0 +1,10 @@
+# https://taskfile.dev
+version: '3'
+
+tasks:
+  test:
+    desc: Run the jargonaut tests (no Claude API call, fake_claude.py stands in)
+    cmds:
+      - python3 -m unittest discover -s haiku/tests
+      - ./generate.py --help >/dev/null
+      - python3 haiku/build_prompt.py --help >/dev/null
