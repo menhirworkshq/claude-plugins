@@ -24,6 +24,7 @@ The plugin folder holds only code and examples; your vocabulary, dictation and l
 | `paths.py` | Where every file lives (XDG directories, environment overrides) |
 | `generate.py` | Writes Vocalinux's corrections JSON from the non-ambiguous heard forms (`--check` to detect drift) |
 | `add.py` | Appends heard forms to an entry without reformatting the file |
+| `launchers.py` | Writes `~/.local/bin/jargonaut-hook`, `~/.local/bin/jargonaut-daemon` and the user unit for this plugin folder (`--check` to detect drift) |
 | `set_hook.py` | Sets Vocalinux's post-processing script path without printing its config, which holds an API key; refuses to replace another script without `--force`, and to run while Vocalinux runs |
 | `haiku/build_prompt.py` | Builds the Haiku prompt from `vocab.toml` and `prompt.toml` (deterministic, `--check`); the daemon runs it at startup |
 | `haiku/corrector.py` | `claude` stream-json wrapper, output parsing and guards |
@@ -137,27 +138,21 @@ journalctl --user -u jargonaut.service -f
 
 1. Copy `examples/vocab.example.toml` to `~/.config/jargonaut/vocab.toml` and make it yours; optionally copy `examples/prompt.example.toml` to `~/.config/jargonaut/prompt.toml` and adapt it.
 2. Run `./generate.py` to write the Vocalinux corrections.
-3. Point the stable link at the plugin folder. The unit and Vocalinux only know this link, so moving or updating the plugin only means updating the link and restarting the service.
+3. Install the launchers and the unit. `launchers.py` writes `~/.local/bin/jargonaut-hook` and `~/.local/bin/jargonaut-daemon`, which run this plugin folder, and `~/.config/systemd/user/jargonaut.service`, which runs the daemon launcher. Vocalinux and the unit only know the launchers: after moving or updating the plugin, run `launchers.py` again from the new folder and restart the service.
 
    ```bash
-   ln -sfn "$PWD" ~/.local/share/jargonaut/current
-   ```
-
-4. Install the unit:
-
-   ```bash
-   ln -sfn ~/.local/share/jargonaut/current/systemd/jargonaut.service ~/.config/systemd/user/jargonaut.service
+   ./launchers.py
    systemctl --user daemon-reload
    systemctl --user enable --now jargonaut.service
    ```
 
-5. Quit Vocalinux, which reads its config only at start and rewrites it on every save, set the script path, then start Vocalinux again:
+4. Quit Vocalinux, which reads its config only at start and rewrites it on every save, set the script path, then start Vocalinux again:
 
    ```bash
    ./set_hook.py
    ```
 
-   It sets `~/.local/share/jargonaut/current/haiku/postproc_hook.py` (`--hook PATH` for another one). The path can also be set by hand in Settings > Post-processing.
+   It sets `~/.local/bin/jargonaut-hook` (`--hook PATH` for another one). The path can also be set by hand in Settings > Post-processing.
 
 The `claude` CLI must be installed and logged in; the unit puts `~/.local/bin` first in `PATH` so it is found.
 
@@ -209,7 +204,7 @@ Ideas collected so far, not implemented. Facts about other tools come from their
 
 - **Install command**: one skill or command that sets everything up by talking with the user: check Vocalinux and the `claude` CLI, create the config and data dirs, seed `vocab.toml` (from the user's repos, past prompts and shell history, never from secrets files), point the stable link, install and start the unit, and set Vocalinux's `post_processing.script_path`.
 - **Learn command**: the calibration loop as a conversation (write a text, the user reads it, Claude diffs it, adds the heard forms, regenerates the corrections, restarts the service, and appends the round to `eval-checks.toml`), with no manual step for the user.
-- **Stable path when installed from the marketplace**: an installed plugin lives in a versioned cache folder whose path changes on each update; a `SessionStart` hook (or the install command) could refresh `~/.local/share/jargonaut/current` to `${CLAUDE_PLUGIN_ROOT}` and restart the service when the version changes.
+- **Stable path when installed from the marketplace**: an installed plugin lives in a versioned cache folder whose path changes on each update; a `SessionStart` hook (or the install command) could rerun `launchers.py` from `${CLAUDE_PLUGIN_ROOT}` and restart the service when the version changes.
 - **`diff.py`**: word-level alignment of the reference text and the transcript that proposes (heard, term) pairs instead of a diff done by hand.
 - **Automatic ambiguity**: mark a heard form ambiguous when it has 3 characters or fewer, is spelled letters, or is a dictionary word of the user's language (hunspell or aspell).
 - **Coverage tracking**: record in `vocab.toml` the round where each term was tested, so each new calibration text picks untested terms and a few traps.

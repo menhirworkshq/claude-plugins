@@ -1,13 +1,11 @@
 [Unit]
 Description=jargonaut daemon (Haiku post-processing for Vocalinux dictation)
-Documentation=file://%h/.local/share/jargonaut/current/README.md
 
 [Service]
 Type=simple
-# A stable symlink to the plugin folder, so neither this unit nor Vocalinux's
-# script_path change when the plugin moves or is updated: only the link does.
-Environment=JARGONAUT_HOME=%h/.local/share/jargonaut/current
-ExecStart=/usr/bin/python3 ${JARGONAUT_HOME}/haiku/postproc_daemon.py
+# The launcher written by launchers.py: this unit does not change when the
+# plugin moves or is updated, only the launcher does.
+ExecStart=%h/.local/bin/jargonaut-daemon
 # ~/.local/bin first, so the claude CLI is found.
 Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
 Environment=PYTHONDONTWRITEBYTECODE=1

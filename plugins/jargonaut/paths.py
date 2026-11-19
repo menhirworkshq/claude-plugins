@@ -92,6 +92,15 @@ def vocalinux_config():
             or _xdg("XDG_CONFIG_HOME", ".config") / "vocalinux" / "config.json")
 
 
+def bin_dir():
+    """Where launchers.py writes jargonaut-hook and jargonaut-daemon."""
+    return _env_path("JARGONAUT_BIN_DIR") or Path.home() / ".local" / "bin"
+
+
+def unit_dir():
+    return _xdg("XDG_CONFIG_HOME", ".config") / "systemd" / "user"
+
+
 def hook():
-    """The post-processing script Vocalinux runs, through the stable link."""
-    return data_dir() / "current" / "haiku" / "postproc_hook.py"
+    """The post-processing script Vocalinux runs: the launcher written by launchers.py."""
+    return bin_dir() / "jargonaut-hook"
