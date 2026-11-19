@@ -84,3 +84,14 @@ def vocalinux_python():
     """Python of the Vocalinux venv, used by eval.py to apply its corrections."""
     return (_env_path("JARGONAUT_VOCALINUX_PYTHON")
             or _xdg("XDG_DATA_HOME", ".local/share") / "vocalinux" / "venv" / "bin" / "python")
+
+
+def vocalinux_config():
+    """Vocalinux's settings file. It holds secrets (an API key): only set_hook.py opens it."""
+    return (_env_path("JARGONAUT_VOCALINUX_CONFIG")
+            or _xdg("XDG_CONFIG_HOME", ".config") / "vocalinux" / "config.json")
+
+
+def hook():
+    """The post-processing script Vocalinux runs, through the stable link."""
+    return data_dir() / "current" / "haiku" / "postproc_hook.py"

@@ -24,6 +24,7 @@ The plugin folder holds only code and examples; your vocabulary, dictation and l
 | `paths.py` | Where every file lives (XDG directories, environment overrides) |
 | `generate.py` | Writes Vocalinux's corrections JSON from the non-ambiguous heard forms (`--check` to detect drift) |
 | `add.py` | Appends heard forms to an entry without reformatting the file |
+| `set_hook.py` | Sets Vocalinux's post-processing script path without printing its config, which holds an API key; refuses to replace another script without `--force`, and to run while Vocalinux runs |
 | `haiku/build_prompt.py` | Builds the Haiku prompt from `vocab.toml` and `prompt.toml` (deterministic, `--check`); the daemon runs it at startup |
 | `haiku/corrector.py` | `claude` stream-json wrapper, output parsing and guards |
 | `haiku/postproc_daemon.py` | Daemon holding the Haiku session, on a Unix socket |
@@ -150,7 +151,13 @@ journalctl --user -u jargonaut.service -f
    systemctl --user enable --now jargonaut.service
    ```
 
-5. Set the script path in Vocalinux (Settings > Post-processing) to `~/.local/share/jargonaut/current/haiku/postproc_hook.py`, written as an absolute path.
+5. Quit Vocalinux, which reads its config only at start and rewrites it on every save, set the script path, then start Vocalinux again:
+
+   ```bash
+   ./set_hook.py
+   ```
+
+   It sets `~/.local/share/jargonaut/current/haiku/postproc_hook.py` (`--hook PATH` for another one). The path can also be set by hand in Settings > Post-processing.
 
 The `claude` CLI must be installed and logged in; the unit puts `~/.local/bin` first in `PATH` so it is found.
 
