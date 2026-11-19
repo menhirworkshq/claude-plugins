@@ -1,0 +1,47 @@
+name: Conform
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  conform:
+    name: Conform
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone the code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Setup Task
+        uses: arduino/setup-task@v2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # A review fix left as a fixup!, squash! or amend! commit would land as is: say how to fold it.
+      - name: Look for unfolded review fixes
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          unfolded=$(git log --format=%s "origin/$BASE_REF..HEAD" | grep -E '^(fixup|squash|amend)! ' || true)
+          if [ -n "$unfolded" ]; then
+            printf '%s\n' "$unfolded"
+            echo "::error::Fold the review fixes before the merge: git rebase -i --autosquash origin/$BASE_REF, then git push --force-with-lease."
+            exit 1
+          fi
+
+      - name: Check the commit scopes
+        run: task check-scopes
+
+      - name: Lint commits
+        run: task conform BASE_BRANCH=origin/${{ github.event.pull_request.base.ref }}
