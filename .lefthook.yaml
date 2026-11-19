@@ -1,0 +1,22 @@
+min_version: 1.7.0
+
+pre-commit:
+  jobs:
+    - name: validate the marketplace and plugins
+      run: task validate
+      glob:
+        - ".claude-plugin/**"
+        - "plugins/**"
+      # The check needs the claude CLI; skip it where it is missing.
+      skip:
+        - run: "! command -v claude"
+    - name: check the commit scopes
+      run: task check-scopes
+      glob:
+        - ".conform.yaml"
+        - ".claude-plugin/marketplace.json"
+
+commit-msg:
+  jobs:
+    - name: lint commit message
+      run: task conform COMMIT_MSG_FILE={1}

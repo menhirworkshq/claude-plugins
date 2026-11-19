@@ -35,7 +35,22 @@ A plugin moves to a repository of its own only once it is mature and draws outsi
 
 Commits follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). The scope is the name of the plugin a commit touches, for example `feat(tmux-pilot): ...`; a commit that touches only the marketplace itself (this README, `marketplace.json`) takes no scope. One commit touches one plugin.
 
-Run `claude plugin validate .` before each commit, and `claude plugin validate plugins/<name>` for the plugin you changed.
+Adding a plugin means adding its name to the `scopes` of `.conform.yaml` too; `task check-scopes` fails while the 2 lists differ.
+
+## Development
+
+The hooks need [lefthook](https://github.com/evilmartians/lefthook), [Task](https://taskfile.dev), Go (to install conform), jq, and the `claude` CLI for the plugin validation. After cloning, register the hooks:
+
+```
+lefthook install
+```
+
+| Hook | Runs |
+|---|---|
+| `pre-commit` | `task validate` when the marketplace or a plugin changes, `task check-scopes` when the scopes or the plugin list change |
+| `commit-msg` | `task conform`: Conventional Commits, scope among the plugins, header of 72 characters at most, lower case, imperative, no final period, body wrapped at 72 columns |
+
+`fixup!`, `squash!` and `amend!` commits pass the hook, since `git rebase --autosquash` folds them; the CI lints every commit of a pull request and rejects them until they are folded. `task --list` shows the tasks.
 
 ## License
 

@@ -1,0 +1,26 @@
+policies:
+  - type: commit
+    spec:
+      header:
+        # Aim for 50 characters, scope included; 72 at most.
+        length: 72
+        imperative: true
+        case: lower
+        invalidLastCharacters: .
+      conventional:
+        types:
+          - build
+          - chore
+          - ci
+          - docs
+          - feat
+          - fix
+          - perf
+          - refactor
+          - revert
+          - style
+          - test
+        # One scope per plugin, named like it in .claude-plugin/marketplace.json
+        # (task check-scopes keeps both in step). Marketplace-only changes take no scope.
+        scopes:
+          - tmux-pilot

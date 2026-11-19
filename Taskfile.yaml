@@ -1,0 +1,73 @@
+# https://taskfile.dev
+#
+# Checks for the marketplace and its plugins. `task --list` shows them.
+
+version: '3'
+
+vars:
+  LOCALBIN: '{{.ROOT_DIR}}/bin'
+  CONFORM_VERSION: v0.1.0-alpha.31
+  # Base branch for conform when no commit message file is given
+  BASE_BRANCH: '{{.BASE_BRANCH | default "origin/main"}}'
+
+tasks:
+  validate:
+    desc: Validate the marketplace manifest and every plugin under plugins/ (needs the claude CLI)
+    cmds:
+      - claude plugin validate .
+      - for p in plugins/*/; do [ -d "$p" ] || continue; claude plugin validate "$p"; done
+
+  check-scopes:
+    desc: Check that the commit scopes of .conform.yaml are exactly the plugins of marketplace.json (needs jq)
+    cmds:
+      - |
+        plugins=$(jq -r '.plugins[].name' .claude-plugin/marketplace.json | sort)
+        scopes=$(sed -n '/^ *scopes:/,$p' .conform.yaml | sed -n 's/^ *- //p' | sort)
+        if [ "$plugins" != "$scopes" ]; then
+          echo "The scopes of .conform.yaml must be the plugins of marketplace.json:" >&2
+          diff <(echo "$plugins") <(echo "$scopes") >&2 || true
+          exit 1
+        fi
+
+  conform:
+    desc: Lint commit messages (COMMIT_MSG_FILE if set, commits since BASE_BRANCH otherwise, which must hold no merge commit)
+    deps: [tools:conform]
+    cmds:
+      - |
+        {{if not .COMMIT_MSG_FILE}}
+        merges=$(git rev-list --merges '{{.BASE_BRANCH}}..HEAD')
+        if [ -n "$merges" ]; then
+          echo "Merge commits since {{.BASE_BRANCH}}, rebase instead of merging:" >&2
+          git log --no-walk --oneline $merges >&2
+          exit 1
+        fi
+        {{end}}
+      # conform rejects fixup!, squash! and amend! messages, which autosquash folds into their target.
+      # CI still lints the branch, so a pull request must be autosquashed before merging.
+      - |
+        {{if .COMMIT_MSG_FILE}}head -n1 '{{.COMMIT_MSG_FILE}}' | grep -qE '^(fixup|squash|amend)! ' && exit 0{{end}}
+        {{.LOCALBIN}}/conform enforce {{if .COMMIT_MSG_FILE}}--commit-msg-file={{.COMMIT_MSG_FILE}}{{else}}--base-branch={{.BASE_BRANCH}}{{end}}
+      # conform cannot check the body width: body lines are wrapped at 72 columns. The check stops at
+      # the scissors line of git commit --verbose, below which git shows the diff.
+      - |
+        check() { awk '/^# -+ >8 -+$/ { exit } NR > 2 && !/^#/ && length($0) > 72 { printf "line %d is longer than 72 columns: %s\n", NR, $0; bad = 1 } END { exit bad }'; }
+        {{if .COMMIT_MSG_FILE}}
+        head -n1 '{{.COMMIT_MSG_FILE}}' | grep -qE '^(fixup|squash|amend)! ' && exit 0
+        check < '{{.COMMIT_MSG_FILE}}' >&2
+        {{else}}
+        status=0
+        for c in $(git rev-list --no-merges '{{.BASE_BRANCH}}..HEAD'); do
+          git log -1 --format=%B "$c" | check >&2 || { echo "in $(git log -1 --format='%h %s' "$c")" >&2; status=1; }
+        done
+        exit $status
+        {{end}}
+
+  tools:conform:
+    internal: true
+    status:
+      - test -x {{.LOCALBIN}}/conform-{{.CONFORM_VERSION}}
+    cmds:
+      - mkdir -p {{.LOCALBIN}}
+      - GOBIN={{.LOCALBIN}} go install github.com/siderolabs/conform/cmd/conform@{{.CONFORM_VERSION}}
+      - mv {{.LOCALBIN}}/conform {{.LOCALBIN}}/conform-{{.CONFORM_VERSION}}
+      - ln -sf conform-{{.CONFORM_VERSION}} {{.LOCALBIN}}/conform
