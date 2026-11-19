@@ -199,6 +199,10 @@ Results of the first evaluation (2026-11-17, about 300 terms, French dictation o
 - `dictionary.txt` in Vocalinux only affects Whisper; Parakeet only sees the corrections JSON.
 - Dictated text is sent to Anthropic through the `claude` CLI; nothing else leaves the machine.
 
+## Known limitations
+
+- **The Haiku session is visible to other Claude Code sessions.** The daemon's `claude` process shows up in the list of local sessions (as `jargonaut-haiku-...`), so another session could send it a message. Whether such a message reaches the conversation of a `claude -p` stream-json process is unverified. If it did, Haiku would answer it as an extra turn, and the daemon, which reads one answer per segment, could take that answer for the correction of the next segment. In shadow mode only the log would be wrong; in live mode the guards (length ratio, similarity) would most likely reject such an answer and type the raw text. The session is replaced after 20 s without a segment or 50 segments, which bounds the effect. Sessions are not saved to disk (`--no-session-persistence`).
+
 ## Future work
 
 Ideas collected so far, not implemented. Facts about other tools come from their docs and sources as of 2026-11-19; entries marked "unverified" need checking first.
