@@ -9,13 +9,7 @@ description: Use when the user wants jargonaut to learn how their dictation mish
 
 Each round is a conversation: you write a short text dense in the user's terms, they read it with Vocalinux and paste what came out, and you turn every misrecognition into vocabulary. The user only reads and pastes; you do the rest, including regenerating and restarting.
 
-Start every command by setting the plugin folder `JH` and the data directory `D` (run the `install` skill first if `~/.local/bin/jargonaut-hook` is missing):
-
-```bash
-JH=$(sed -n 's#^exec [^ ]* \(/.*\)/haiku/postproc_hook\.py.*#\1#p' ~/.local/bin/jargonaut-hook 2>/dev/null)
-git -C "${JH:-/nonexistent}" rev-parse --is-inside-work-tree >/dev/null 2>&1 || JH="${CLAUDE_PLUGIN_ROOT}"
-D=~/.local/share/jargonaut
-```
+Start every command with `A=~/.local/share/jargonaut/app D=~/.local/share/jargonaut`: `$A` is the installed runtime the service runs from, `$D` the data directory. Run the `install` skill first if `$A` is missing.
 
 The vocabulary is `~/.config/jargonaut/vocab.toml`.
 
@@ -68,8 +62,8 @@ For each difference, decide:
 A heard form is **ambiguous** when it is 3 characters or shorter, spelled letters ("K S"), or a real word or phrase in the user's language ("quick", "chez moi", "sonné"). Ambiguous forms go to the Haiku pass only; the others become deterministic corrections.
 
 ```bash
-python3 $JH/add.py Podman "pod man" "pot man"
-python3 $JH/add.py --ambiguous --hint "container tool, not a French word" Podman "pot man"
+python3 $A/add.py Podman "pod man" "pot man"
+python3 $A/add.py --ambiguous --hint "container tool, not a French word" Podman "pot man"
 ```
 
 Never treat a term as done after 1 variant: hard terms have many (tmux heard as Temux, Simux, T-Meux). Unseen variants are left to Haiku.
@@ -88,12 +82,12 @@ sentences = [
 ]
 ```
 
-Then check that it parses: `python3 $JH/haiku/eval.py --dry-run`.
+Then check that it parses: `python3 $A/haiku/eval.py --dry-run`.
 
 ## Step 7: regenerate and restore
 
 ```bash
-python3 $JH/generate.py
+python3 $A/generate.py
 [ -e ~/.config/jargonaut/live.paused ] && mv ~/.config/jargonaut/live.paused ~/.config/jargonaut/live
 systemctl --user restart jargonaut.service
 ```

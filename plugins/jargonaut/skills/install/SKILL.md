@@ -1,6 +1,6 @@
 ---
 name: install
-description: Use when the user wants to set up jargonaut, the Vocalinux post-processing plugin, or says that dictation mangles technical terms and they just installed this plugin, or when the jargonaut service, its launchers or its vocabulary is missing, or after the plugin was updated.
+description: Use when the user wants to set up jargonaut, the Vocalinux post-processing plugin, or says that dictation mangles technical terms and they just installed this plugin, when the jargonaut service, its runtime or its vocabulary is missing, or when a session start message says the installed jargonaut is out of date.
 ---
 
 # Installing jargonaut
@@ -9,7 +9,7 @@ description: Use when the user wants to set up jargonaut, the Vocalinux post-pro
 
 The user installed the plugin and only talks; you do every step. Ask a question only when the answer cannot be found on the machine. Never overwrite what the user already has: an existing vocabulary or post-processing script is kept unless they agree to replace it.
 
-Below, `$JH` is the plugin folder the user runs jargonaut from, chosen in step 3.
+Below, `A` is the installed runtime, `~/.local/share/jargonaut/app`: a copy of this plugin, or a link to a git checkout when the user develops jargonaut. Vocalinux and the service only reach it through the launchers `~/.local/bin/jargonaut-hook` and `jargonaut-daemon`.
 
 ## Ground rules
 
@@ -35,21 +35,9 @@ mkdir -p ~/.config/jargonaut ~/.local/share/jargonaut/calibration
 mkdir -p -m 700 ~/.local/state/jargonaut
 ```
 
-## Step 3: choose the plugin folder
+## Step 3: seed the vocabulary
 
-Vocalinux and the unit only know the launchers in `~/.local/bin` (`jargonaut-hook`, `jargonaut-daemon`), which point at 1 plugin folder. Use this plugin's folder, unless the launchers already point into a git checkout: then the user develops jargonaut, keep that checkout and say so.
-
-```bash
-JH=$(sed -n 's#^exec [^ ]* \(/.*\)/haiku/postproc_hook\.py.*#\1#p' ~/.local/bin/jargonaut-hook 2>/dev/null)
-git -C "${JH:-/nonexistent}" rev-parse --is-inside-work-tree >/dev/null 2>&1 || JH="${CLAUDE_PLUGIN_ROOT}"
-echo "$JH"
-```
-
-Set `JH` the same way at the start of every later command.
-
-## Step 4: seed the vocabulary
-
-If `~/.config/jargonaut/vocab.toml` exists, keep it and skip to step 5.
+If `~/.config/jargonaut/vocab.toml` exists, keep it and skip to step 4.
 
 Otherwise collect candidate terms, counting how often each appears:
 
@@ -66,34 +54,38 @@ term = "Podman"
 
 Heard forms come later, from the `learn` skill: past prompts were often dictated with another recognizer, so their errors do not predict this one's.
 
-Optionally create `~/.config/jargonaut/prompt.toml` from `$JH/examples/prompt.example.toml`: ask how the prompt should name the user, their language and field, and fill `name` and `speaker`. Leave the other keys out until calibration rounds give real examples.
+Optionally create `~/.config/jargonaut/prompt.toml` from `${CLAUDE_PLUGIN_ROOT}/examples/prompt.example.toml`: ask how the prompt should name the user, their language and field, and fill `name` and `speaker`. Leave the other keys out until calibration rounds give real examples.
+
+## Step 4: install the runtime and the service
+
+```bash
+A=~/.local/share/jargonaut/app
+if [ -L "$A" ] && git -C "$(readlink -f "$A")" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "development checkout: $(readlink -f "$A")"
+else
+  python3 "${CLAUDE_PLUGIN_ROOT}/install.py"
+fi
+systemctl --user is-active jargonaut.service
+```
+
+- `install.py` copies this plugin to `$A`, writes the 2 launchers and the user unit, reloads systemd, and starts or restarts the service. It is idempotent; `--check` exits 1 when `$A` differs from this plugin.
+- When `$A` links to a git checkout, the user develops jargonaut: never replace it with a copy. Say so; if the launchers or the unit are missing, rerun `install.py --link` from that checkout.
+- Check that `$XDG_RUNTIME_DIR/jargonaut.sock` exists. On failure, read `journalctl --user -u jargonaut.service -n 50` and fix the cause.
 
 ## Step 5: generate the corrections
 
 ```bash
-python3 "$JH/generate.py"
+python3 ~/.local/share/jargonaut/app/generate.py
 ```
 
 It writes Vocalinux's `custom-dictionary-corrections.json`, which Vocalinux reloads live. With no heard forms yet, it holds no corrections: that is expected.
 
-## Step 6: install and start the service
-
-```bash
-python3 "$JH/launchers.py"
-systemctl --user daemon-reload
-systemctl --user enable --now jargonaut.service
-systemctl --user restart jargonaut.service
-systemctl --user is-active jargonaut.service
-```
-
-`launchers.py` writes the 2 launchers and the unit for `$JH`; it is idempotent, and `--check` reports drift. The restart makes an already running daemon pick up the new folder. Check that `$XDG_RUNTIME_DIR/jargonaut.sock` exists; on failure read `journalctl --user -u jargonaut.service -n 50` and fix the cause.
-
-## Step 7: connect Vocalinux
+## Step 6: connect Vocalinux
 
 Vocalinux reads its `config.json` once at start and rewrites it whole on every save, so the change is made while it is stopped. The file holds an API key: never open it yourself, `set_hook.py` changes only the script path and prints nothing else.
 
 1. Ask the user to quit Vocalinux (tray icon > Quit).
-2. Run `python3 "$JH/set_hook.py"`: it sets the script path to `~/.local/bin/jargonaut-hook` (`--hook PATH` for another one).
+2. Run `python3 ~/.local/share/jargonaut/app/set_hook.py`: it sets the script path to `~/.local/bin/jargonaut-hook` (`--hook PATH` for another one).
 
 | Exit code | Meaning | Next |
 |---|---|---|
@@ -106,11 +98,11 @@ Vocalinux reads its `config.json` once at start and rewrites it whole on every s
 
 The script also lists the names of the other `post_processing` settings (for example `enabled`). If post-processing looks disabled, tell the user to enable it in Settings > Post-processing.
 
-## Step 8: hand over
+## Step 7: hand over
 
 Tell the user:
 
 - jargonaut starts in shadow mode: it types the raw text and only logs what Haiku would have typed. `touch ~/.config/jargonaut/live` switches to live mode, `rm` switches back; offer to do it once a few calibration rounds look good.
 - Dictated text is sent to Anthropic through the `claude` CLI; nothing else leaves the machine.
-- After each update of the plugin, run this skill again: the launchers must point at the new plugin folder (steps 3 and 6 only; the rest is kept).
+- After an update of the plugin, a message at session start asks to run `/jargonaut:install` again: it reruns step 4 only, the vocabulary and the Vocalinux setting are kept.
 - Next step: the `learn` skill, which teaches jargonaut how this user's recognizer mishears their terms.
