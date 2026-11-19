@@ -1,0 +1,20 @@
+[Unit]
+Description=jargonaut daemon (Haiku post-processing for Vocalinux dictation)
+Documentation=file://%h/menhirworks/claude-plugins-jargonaut/plugins/jargonaut/README.md
+
+[Service]
+Type=simple
+# The plugin folder; override it with `systemctl --user edit jargonaut.service`
+# when the plugin lives elsewhere.
+Environment=JARGONAUT_HOME=%h/menhirworks/claude-plugins-jargonaut/plugins/jargonaut
+ExecStart=/usr/bin/python3 ${JARGONAUT_HOME}/haiku/postproc_daemon.py
+# ~/.local/bin first, so the claude CLI is found.
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONDONTWRITEBYTECODE=1
+Restart=on-failure
+RestartSec=5
+# No extra sandboxing: claude needs the home directory (login, temp dirs).
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target

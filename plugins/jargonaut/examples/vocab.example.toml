@@ -1,0 +1,80 @@
+# Example jargonaut vocabulary: copy it to ~/.config/jargonaut/vocab.toml and make it yours.
+#
+# One [[term]] per canonical term:
+#   term       the exact spelling to type
+#   heard      what the speech model produced instead, in practice
+#   ambiguous  true when a heard form is also ordinary text: it then only goes
+#              to the Haiku pass, never to the deterministic corrections
+#   hint       a short note that helps Haiku tell the term from ordinary text
+# A term may have 2 entries: a safe one (deterministic) and an ambiguous one (Haiku only).
+
+# Safe: these forms never occur as ordinary text, Vocalinux replaces them itself.
+
+[[term]]
+term = "PostgreSQL"
+heard = ["post gré SQL", "Postgre SQL"]
+
+[[term]]
+term = "pytest"
+heard = ["pie test", "paille test"]
+
+[[term]]
+term = "nginx"
+heard = ["engine X", "N gin X"]
+
+[[term]]
+term = "ClickHouse"
+heard = ["click house", "clic house"]
+
+[[term]]
+term = "DuckDB"
+heard = ["duck DB", "duc DB"]
+
+[[term]]
+term = "Podman"
+heard = ["pod man"]
+hint = "container engine, like Docker"
+
+# Ambiguous: these forms are also ordinary French, only Haiku decides.
+
+[[term]]
+term = "Cargo"
+heard = ["cargo"]
+ambiguous = true
+hint = "Rust package manager; \"un cargo\" (a ship) stays"
+
+[[term]]
+term = "Vite"
+heard = ["vite"]
+ambiguous = true
+hint = "frontend build tool; the French adverb \"vite\" (fast) stays"
+
+[[term]]
+term = "Traefik"
+heard = ["trafic"]
+ambiguous = true
+hint = "reverse proxy; \"le trafic réseau\" stays"
+
+[[term]]
+term = "Celery"
+heard = ["céleri"]
+ambiguous = true
+hint = "Python task queue, often with Redis"
+
+[[term]]
+term = "Jupyter"
+heard = ["Jupiter"]
+ambiguous = true
+hint = "notebook server; the planet stays"
+
+# The same term with both kinds of entries.
+
+[[term]]
+term = "Redis"
+heard = ["Reddis", "red is"]
+
+[[term]]
+term = "Redis"
+heard = ["redis"]
+ambiguous = true
+hint = "in-memory database; \"j'ai redis\" (redire) stays"

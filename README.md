@@ -13,6 +13,7 @@ Claude Code plugins by Menhir Works.
 
 | Plugin | What it does |
 |---|---|
+| [jargonaut](plugins/jargonaut) | Post-processing for [Vocalinux](https://github.com/VocaHQ/vocalinux) dictation that fixes technical jargon, with your vocabulary and Claude Haiku |
 | [tmux-pilot](https://github.com/plaffitt/tmux-pilot) | Lets Claude drive your tmux panes safely, with clear signs of who is typing |
 
 ## Layout

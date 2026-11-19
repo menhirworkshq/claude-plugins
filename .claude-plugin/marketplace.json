@@ -15,6 +15,11 @@
         "repo": "plaffitt/tmux-pilot"
       },
       "description": "Lets Claude drive your tmux panes safely, with clear signs of who is typing"
+    },
+    {
+      "name": "jargonaut",
+      "source": "./plugins/jargonaut",
+      "description": "Post-processing for Vocalinux dictation that fixes technical jargon, with your vocabulary and Claude Haiku"
     }
   ]
 }

@@ -1,0 +1,19 @@
+{
+  "name": "jargonaut",
+  "version": "0.1.0",
+  "description": "Post-processing for Vocalinux dictation that fixes technical jargon: deterministic corrections from your vocabulary, then a Claude Haiku pass for the ambiguous forms",
+  "author": {
+    "name": "Paul Laffitte",
+    "url": "https://github.com/plaffitt"
+  },
+  "homepage": "https://github.com/menhirworks/claude-plugins/tree/main/plugins/jargonaut",
+  "repository": "https://github.com/menhirworks/claude-plugins",
+  "license": "MIT",
+  "keywords": [
+    "dictation",
+    "speech-to-text",
+    "vocalinux",
+    "haiku",
+    "vocabulary"
+  ]
+}
