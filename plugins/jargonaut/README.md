@@ -136,15 +136,21 @@ journalctl --user -u jargonaut.service -f
 
 1. Copy `examples/vocab.example.toml` to `~/.config/jargonaut/vocab.toml` and make it yours; optionally copy `examples/prompt.example.toml` to `~/.config/jargonaut/prompt.toml` and adapt it.
 2. Run `./generate.py` to write the Vocalinux corrections.
-3. Install the unit. It finds the plugin through `JARGONAUT_HOME`; if the plugin is not where the unit expects it, set it with `systemctl --user edit jargonaut.service` (`[Service]` then `Environment=JARGONAUT_HOME=/path/to/plugins/jargonaut`).
+3. Point the stable link at the plugin folder. The unit and Vocalinux only know this link, so moving or updating the plugin only means updating the link and restarting the service.
 
    ```bash
-   ln -s "$PWD/systemd/jargonaut.service" ~/.config/systemd/user/jargonaut.service
+   ln -sfn "$PWD" ~/.local/share/jargonaut/current
+   ```
+
+4. Install the unit:
+
+   ```bash
+   ln -sfn ~/.local/share/jargonaut/current/systemd/jargonaut.service ~/.config/systemd/user/jargonaut.service
    systemctl --user daemon-reload
    systemctl --user enable --now jargonaut.service
    ```
 
-4. Set the script path in Vocalinux (Settings > Post-processing) to the absolute path of `haiku/postproc_hook.py`.
+5. Set the script path in Vocalinux (Settings > Post-processing) to `~/.local/share/jargonaut/current/haiku/postproc_hook.py`, written as an absolute path.
 
 The `claude` CLI must be installed and logged in; the unit puts `~/.local/bin` first in `PATH` so it is found.
 
@@ -187,3 +193,37 @@ Results of the first evaluation (2026-11-17, about 300 terms, French dictation o
 - Parakeet gets no language setting from Vocalinux (it auto-detects per segment), so forcing French is not possible.
 - `dictionary.txt` in Vocalinux only affects Whisper; Parakeet only sees the corrections JSON.
 - Dictated text is sent to Anthropic through the `claude` CLI; nothing else leaves the machine.
+
+## Future work
+
+Ideas collected so far, not implemented. Facts about other tools come from their docs and sources as of 2026-11-19; entries marked "unverified" need checking first.
+
+### Claude Code plugin experience
+
+- **Install command**: one skill or command that sets everything up by talking with the user: check Vocalinux and the `claude` CLI, create the config and data dirs, seed `vocab.toml` (from the user's repos, past prompts and shell history, never from secrets files), point the stable link, install and start the unit, and set Vocalinux's `post_processing.script_path`.
+- **Learn command**: the calibration loop as a conversation (write a text, the user reads it, Claude diffs it, adds the heard forms, regenerates the corrections, restarts the service, and appends the round to `eval-checks.toml`), with no manual step for the user.
+- **Stable path when installed from the marketplace**: an installed plugin lives in a versioned cache folder whose path changes on each update; a `SessionStart` hook (or the install command) could refresh `~/.local/share/jargonaut/current` to `${CLAUDE_PLUGIN_ROOT}` and restart the service when the version changes.
+- **`diff.py`**: word-level alignment of the reference text and the transcript that proposes (heard, term) pairs instead of a diff done by hand.
+- **Automatic ambiguity**: mark a heard form ambiguous when it has 3 characters or fewer, is spelled letters, or is a dictionary word of the user's language (hunspell or aspell).
+- **Coverage tracking**: record in `vocab.toml` the round where each term was tested, so each new calibration text picks untested terms and a few traps.
+- **Shadow log review**: a command that summarizes what Haiku would have changed (changes, guard trips, latency) to decide when to go live, and turns recurring misses into vocabulary entries.
+- **Error rate per round**: measure the term error rate raw, after the corrections and after Haiku, to know when more calibration stops paying off.
+
+### Correction quality
+
+- Words that are also real words and only the topic can disambiguate ("Linux" heard for "Vocalinux") are fixed only part of the time; more context (longer previous segments) or per-term examples in the prompt may help.
+- The similarity guard (0.75) sits close to some legitimate multi-word fixes; tune it from shadow logs rather than from the eval set alone.
+- Latency p95 is about 2.1 to 2.3 s, slightly over the 2 s target; options are a shorter prompt (only the terms likely in the segment), or skipping Haiku when a cheap local check finds no candidate term.
+- Grammar and punctuation are out of scope today; they could become an opt-in second level.
+- Recognizer biasing: sherpa-onnx supports hotwords for transducer models with modified beam search; exposing them for Parakeet in Vocalinux would fix terms before any post-processing (needs an upstream change).
+
+### Other targets
+
+- **Vocalinux `dictionary.txt`**: bias terms for the Whisper engines (one term per line); `generate.py` could write it from `vocab.toml` too.
+- **Voxtype** (Linux, macOS, MIT): its `[output.post_process] command` has the same stdin/stdout contract with a fallback on failure, so the hook works as is (not applied in streaming mode). Its `[text] replacements` TOML map and `initial_prompt` / `terms_file` could get an export adapter.
+- **Handy** (Linux, macOS, Windows, MIT): an executable at `~/.local/share/com.pais.handy/hooks/transcription` gets the text on stdin and its stdout is pasted (30 s timeout, original on failure, no `PATH` given to the hook); `custom_words` (a word list, fuzzy matched) could be exported.
+- **hyprwhspr** (Linux, MIT): `word_overrides` (`{"heard": "replacement"}`, whole word) could be exported; no external hook found.
+- **nerd-dictation**: its `nerd_dictation_process(text)` Python config function could call the hook.
+- **OpenAI-compatible endpoint mode**: serve `POST /v1/chat/completions` on localhost so any tool with a custom LLM post-processing URL can use jargonaut without a hook: Handy ("Custom" provider), VoiceInk (macOS), Whispering (unverified), OpenWhispr (unverified).
+- **One export command**: `jargonaut export --target vocalinux|voxtype|hyprwhspr|handy` writing each tool's native replacement and bias formats from the same `vocab.toml`.
+- Not possible today: Wispr Flow (no hook, no custom endpoint), whisper-writer (no post-processing, inactive), Speech Note (no hook found).
