@@ -257,6 +257,18 @@ class DaemonTest(unittest.TestCase):
         self.assertEqual(prompt.read_text(encoding="utf-8"), expected)
         self.assertIn("- Celery: \"céleri\" (context)", expected)
 
+    def test_spare_restart_backs_off(self):
+        # A claude that exits at once must not be respawned every second.
+        count = Path(tempfile.mkdtemp()) / "starts"
+        self.start(mode="exit", FAKE_CLAUDE_COUNT=count)
+        time.sleep(8.5)
+        starts = len(count.read_text().splitlines())
+        # 1 s ticks without backoff would give about 9; with it: t=0, 1, 3, 7.
+        self.assertLessEqual(starts, 5)
+        self.assertGreaterEqual(starts, 2)
+        resp = self.ask(CORE)
+        self.assertEqual(resp["final"], CORE)  # still answers, with the raw text
+
     def test_session_turns_and_turn_cap(self):
         self.start(JARGONAUT_MAX_TURNS=2)
         time.sleep(0.5)  # spare process started

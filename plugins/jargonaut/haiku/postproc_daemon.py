@@ -54,6 +54,11 @@ SESSION_IDLE_S = float(os.environ.get("JARGONAUT_SESSION_IDLE_S", 20))
 MAX_TURNS = int(os.environ.get("JARGONAUT_MAX_TURNS", 50))
 CONTEXT_SEGMENTS = 2  # carried as <previous_segments> into a session restarted on MAX_TURNS
 BREAKER_FAILURES = 2
+# Restarting a spare that cannot start (claude missing) or dies at once (logged
+# out, broken update) backs off from 1 s up to this, and resets once a spare
+# has stayed alive for SPARE_HEALTHY_S.
+SPARE_BACKOFF_MAX_S = float(os.environ.get("JARGONAUT_SPARE_BACKOFF_MAX_S", 60))
+SPARE_HEALTHY_S = 5
 BREAKER_COOLDOWN_S = float(os.environ.get("JARGONAUT_BREAKER_COOLDOWN_S", 60))
 DEFAULT_BUDGET_MS = 3500
 MAX_REQUEST_BYTES = 64 * 1024
@@ -71,6 +76,9 @@ class Corrector:
         self.session = None
         self.spare = None
         self.spare_lock = threading.Lock()
+        self.spare_started = 0.0
+        self.spare_backoff = 1.0
+        self.next_prestart = 0.0
         self.last_segment = 0.0
         self.history = []  # final texts of the current burst
         self.failures = 0
@@ -86,6 +94,7 @@ class Corrector:
             with self.spare_lock:
                 if self.spare is not None and self.spare.alive():
                     return
+                self.spare_started = time.monotonic()
                 try:
                     self.spare = Claude(self.system_prompt)
                 except Exception as e:  # claude missing, fork failure...
@@ -117,9 +126,14 @@ class Corrector:
                 if self.session is not None and time.monotonic() - self.last_segment > SESSION_IDLE_S:
                     self._drop_session("idle")
                     self.history = []
+            now = time.monotonic()
             with self.spare_lock:
-                dead = self.spare is not None and not self.spare.alive()
-            if dead or self.spare is None:
+                alive = self.spare is not None and self.spare.alive()
+                if alive and now - self.spare_started >= SPARE_HEALTHY_S:
+                    self.spare_backoff = 1.0
+            if not alive and now >= self.next_prestart:
+                self.next_prestart = now + self.spare_backoff
+                self.spare_backoff = min(self.spare_backoff * 2, SPARE_BACKOFF_MAX_S)
                 self._prestart()
 
     def close(self):
