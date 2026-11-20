@@ -12,7 +12,7 @@ Never commit with `--no-verify`, and never work around a hook failure: fix the m
 
 - Conventional Commits, in English, scope = the plugin's name; no scope for marketplace-only changes.
 - Header 72 characters at most (aim for 50), lower case, imperative, no final period; body wrapped at 72 columns, saying why.
-- 1 plugin and 1 topic per commit. Stage only the files of that topic.
+- 1 plugin and 1 topic per commit, with the plugin's name as scope when it touches `plugins/<name>/` (`task check-commits` enforces it). Stage only the files of that topic.
 - No AI co-author or AI trailer.
 - Rewriting pushed history needs the maintainer's explicit approval and `git push --force-with-lease=<branch>:<expected sha>`.
 

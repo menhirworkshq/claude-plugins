@@ -16,6 +16,11 @@ pre-commit:
         - ".conform.yaml"
         - ".claude-plugin/marketplace.json"
 
+pre-push:
+  jobs:
+    - name: check that each commit touches 1 plugin at most
+      run: task check-commits
+
 commit-msg:
   jobs:
     - name: lint commit message

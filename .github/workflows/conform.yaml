@@ -51,7 +51,7 @@ jobs:
 
       # A pull request is linted since its base branch, a push since the commit main was at before
       # it (the first commit when the push created main).
-      - name: Lint commits
+      - name: Find the first commit to lint
         env:
           PR_BASE: ${{ github.event.pull_request.base.ref }}
           PUSH_BEFORE: ${{ github.event.before }}
@@ -63,4 +63,10 @@ jobs:
           else
             base="$PUSH_BEFORE"
           fi
-          task conform BASE_BRANCH="$base"
+          echo "BASE_BRANCH=$base" >> "$GITHUB_ENV"
+
+      - name: Lint commits
+        run: task conform BASE_BRANCH="$BASE_BRANCH"
+
+      - name: Check that each commit touches 1 plugin at most, named as its scope
+        run: task check-commits BASE_BRANCH="$BASE_BRANCH"

@@ -29,6 +29,28 @@ tasks:
           exit 1
         fi
 
+  check-commits:
+    desc: Check that each commit since BASE_BRANCH touches 1 plugin at most and takes its name as scope (all commits when BASE_BRANCH does not exist yet)
+    silent: true
+    cmds:
+      - |
+        if git rev-parse -q --verify '{{.BASE_BRANCH}}^{commit}' >/dev/null; then range='{{.BASE_BRANCH}}..HEAD'; else range=HEAD; fi
+        status=0
+        for c in $(git rev-list --no-merges $range); do
+          subject=$(git log -1 --format=%s "$c" | sed -E 's/^((fixup|squash|amend)! )+//')
+          scope=$(printf '%s\n' "$subject" | sed -nE 's/^[a-z]+\(([^)]*)\)!?: .*/\1/p')
+          plugins=$(git diff-tree --no-commit-id --name-only -r --root "$c" | sed -n 's|^plugins/\([^/]*\)/.*|\1|p' | sort -u)
+          count=$(printf '%s' "$plugins" | grep -c . || true)
+          if [ "$count" -gt 1 ]; then
+            echo "$(git log -1 --format='%h %s' "$c"): touches $count plugins ($(echo $plugins)), split it 1 commit per plugin" >&2
+            status=1
+          elif [ "$count" -eq 1 ] && [ "$scope" != "$plugins" ]; then
+            echo "$(git log -1 --format='%h %s' "$c"): touches plugins/$plugins, so its scope must be $plugins" >&2
+            status=1
+          fi
+        done
+        exit $status
+
   conform:
     desc: Lint commit messages (COMMIT_MSG_FILE if set, commits since BASE_BRANCH otherwise, which must hold no merge commit)
     deps: [tools:conform]

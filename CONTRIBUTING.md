@@ -16,13 +16,14 @@ The hooks need lefthook, [Task](https://taskfile.dev), Go (to install conform in
 |---|---|
 | `pre-commit` | `task validate` when the marketplace or a plugin changes, `task check-scopes` when the scopes or the plugin list change |
 | `commit-msg` | `task conform` on the message |
+| `pre-push` | `task check-commits`: each commit touches 1 plugin at most, and takes its name as scope |
 
 Never skip them with `--no-verify`. The CI runs the same checks on every pull request and on every push to `main`, where a bad commit is reported but not blocked: the local hook is what keeps it out.
 
 ## Commits
 
 - [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/), in English. The scope is the name of the plugin the commit touches (`feat(tmux-pilot): ...`); a commit that touches only the marketplace itself takes no scope.
-- 1 commit touches 1 plugin and 1 topic.
+- 1 commit touches 1 plugin and 1 topic. A commit that changes `plugins/<name>/` must take `<name>` as scope; only a commit that touches no plugin goes without one. `task check-commits` enforces it before each push and in the CI.
 - Header: 72 characters at most (aim for 50), lower case, imperative, no final period.
 - Body: optional; it says why, not what the diff shows; wrapped at 72 columns.
 - No AI co-author or AI trailer.
