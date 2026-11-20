@@ -39,13 +39,17 @@ mkdir -p -m 700 ~/.local/state/jargonaut
 
 If `~/.config/jargonaut/vocab.toml` exists, keep it and skip to step 4.
 
-Otherwise collect candidate terms, counting how often each appears:
+Otherwise collect candidate terms with `seed.py`. Never read these sources yourself (no `cat`, `grep` or `Read` of histories or transcripts): they can hold pasted credentials, and `seed.py` prints only term-like tokens with their counts, never a line, and drops tokens that look like secrets. Each source is opt-in: ask the user about each one before passing it, and say what it reads.
 
-1. Ask where the user keeps code (for example `~/dev`). There: repository names, Go module and package names (`go.mod`), `package.json` names, Taskfile and Makefile targets, Kubernetes kinds (`kind:` in YAML), CLI tool names.
-2. Command names: the first word of each line of `~/.bash_history` or `~/.zsh_history`, nothing else from those lines.
-3. Past Claude Code prompts: the user messages of `~/.claude/projects/*/*.jsonl` (`type` "user", text content only), keeping only tokens that look like terms: CamelCase, kebab-case, dotted names, words with digits, all-caps acronyms.
+1. Code: ask where the user keeps code (for example `~/dev`), then `--code DIR`. It reads repository names, Go module names (`go.mod`), `package.json` names, Taskfile and Makefile targets and Kubernetes kinds, and never opens files named like secrets (`.env`, `*secret*`, `*.key`...).
+2. Shell history: ask before passing `--history`. It keeps only the command (first word) of each line of `~/.bash_history` and `~/.zsh_history`.
+3. Past Claude Code prompts: ask before passing `--prompts`. It keeps only term-like tokens (CamelCase, kebab-case, dotted names, words with digits, acronyms) of the user messages in `~/.claude/projects/*/*.jsonl`.
 
-Keep terms seen at least 3 times, drop plain dictionary words of the user's language, and show the user the list grouped by source, with counts. Remove what they reject, then write one entry per term:
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/seed.py" --code ~/dev --history --prompts   # only the sources the user accepted
+```
+
+`seed.py` keeps terms seen at least 3 times (`--min`). Drop plain dictionary words of the user's language, and show the user the list grouped by source, with counts. Remove what they reject, then write one entry per term:
 
 ```toml
 [[term]]

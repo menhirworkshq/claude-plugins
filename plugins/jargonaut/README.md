@@ -24,6 +24,7 @@ The plugin folder holds only code and examples; your vocabulary, dictation and l
 | `paths.py` | Where every file lives (XDG directories, environment overrides) |
 | `generate.py` | Writes Vocalinux's corrections JSON from the non-ambiguous heard forms (`--check` to detect drift) |
 | `add.py` | Appends heard forms to an entry without reformatting the file |
+| `seed.py` | Lists candidate terms from code, shell history and past Claude Code prompts (each source opt-in), printing only tokens with counts, never raw lines, and dropping tokens that look like secrets |
 | `install.py` | Installs the runtime (the code the daemon and the hook run) at a fixed place, `~/.local/share/jargonaut/app`, as a copy or with `--link` as a link to a checkout; writes `~/.local/bin/jargonaut-hook`, `~/.local/bin/jargonaut-daemon` and the user unit, and restarts it (`--check` to detect drift) |
 | `hooks/hooks.json` | `SessionStart` hook: says when the installed runtime is older than the plugin |
 | `set_hook.py` | Sets Vocalinux's post-processing script path without printing its config, which holds an API key; refuses to replace another script without `--force`, and to run while Vocalinux runs |
