@@ -59,10 +59,10 @@ For each difference, decide:
 
 ## Step 5: add the heard forms
 
-A heard form is **ambiguous** when it is 3 characters or shorter, spelled letters ("K S"), or a real word or phrase in the user's language ("quick", "chez moi", "sonné"). Ambiguous forms go to the Haiku pass only; the others become deterministic corrections.
+A heard form goes into 1 entry only: safe or ambiguous, never both (`generate.py` refuses it). It is **ambiguous** when it is 3 characters or shorter, spelled letters ("K S"), or a real word or phrase in the user's language ("quick", "chez moi", "sonné"). Ambiguous forms go to the Haiku pass only; the others become deterministic corrections.
 
 ```bash
-python3 $A/add.py Podman "pod man" "pot man"
+python3 $A/add.py Podman "pod man" "podmane"
 python3 $A/add.py --ambiguous --hint "container tool, not a French word" Podman "pot man"
 ```
 
