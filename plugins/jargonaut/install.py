@@ -48,7 +48,8 @@ def runtime_files(root):
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = sorted(d for d in dirnames if d not in EXCLUDE)
         for name in filenames:
-            if name.endswith(".pyc"):
+            # VERSION only exists in an installed copy: it must not change the fingerprint.
+            if name.endswith(".pyc") or (dirpath == str(root) and name == "VERSION"):
                 continue
             files.append((Path(dirpath) / name).relative_to(root))
     return sorted(files)

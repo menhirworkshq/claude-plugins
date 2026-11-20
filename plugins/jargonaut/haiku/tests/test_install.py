@@ -42,6 +42,9 @@ class InstallTest(unittest.TestCase):
         self.assertIn(str(self.app / "haiku" / "postproc_hook.py"), hook.read_text())
         self.assertEqual(self.run_install("--check").returncode, 0)
         self.assertEqual(self.run_install("--session-check").stdout, "")
+        # Run from the installed copy, it compares the copy with itself.
+        self.assertEqual(self.run_install("--check", script=self.app / "install.py").returncode, 0)
+        self.assertEqual(self.run_install("--session-check", script=self.app / "install.py").stdout, "")
 
     def test_session_check_reports_a_stale_copy(self):
         self.run_install("--no-service")
