@@ -23,5 +23,6 @@ policies:
         # One scope per plugin, named like it in .claude-plugin/marketplace.json
         # (task check-scopes keeps both in step). Marketplace-only changes take no scope.
         scopes:
+          - git-history
           - jargonaut
           - tmux-pilot

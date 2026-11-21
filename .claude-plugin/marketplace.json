@@ -20,6 +20,11 @@
       "name": "jargonaut",
       "source": "./plugins/jargonaut",
       "description": "Post-processing for Vocalinux dictation that fixes technical jargon, with your vocabulary and Claude Haiku"
+    },
+    {
+      "name": "git-history",
+      "source": "./plugins/git-history",
+      "description": "Gives a branch a clean history, one change per commit: split mixed commits, regroup reworks, harden a branch before merging"
     }
   ]
 }

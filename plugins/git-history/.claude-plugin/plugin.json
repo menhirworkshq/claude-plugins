@@ -1,0 +1,19 @@
+{
+  "name": "git-history",
+  "description": "Skills to give a branch a clean history where each commit carries one change: split mixed commits, regroup reworks into the commit they rework, and harden a whole branch before it is merged",
+  "author": {
+    "name": "Paul Laffitte",
+    "url": "https://github.com/plaffitt"
+  },
+  "homepage": "https://github.com/menhirworkshq/claude-plugins/tree/main/plugins/git-history",
+  "repository": "https://github.com/menhirworkshq/claude-plugins",
+  "license": "MIT",
+  "keywords": [
+    "git",
+    "commits",
+    "history",
+    "rebase",
+    "autosquash",
+    "code-review"
+  ]
+}
