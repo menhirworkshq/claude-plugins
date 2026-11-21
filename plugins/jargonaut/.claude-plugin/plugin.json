@@ -5,8 +5,8 @@
     "name": "Paul Laffitte",
     "url": "https://github.com/plaffitt"
   },
-  "homepage": "https://github.com/menhirworks/claude-plugins/tree/main/plugins/jargonaut",
-  "repository": "https://github.com/menhirworks/claude-plugins",
+  "homepage": "https://github.com/menhirworkshq/claude-plugins/tree/main/plugins/jargonaut",
+  "repository": "https://github.com/menhirworkshq/claude-plugins",
   "license": "MIT",
   "keywords": [
     "dictation",
