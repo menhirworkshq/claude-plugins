@@ -5,7 +5,7 @@ Claude Code plugins by Menhir Works.
 ## Install
 
 ```
-/plugin marketplace add menhirworks/claude-plugins
+/plugin marketplace add menhirworkshq/claude-plugins
 /plugin install <plugin>@menhirworks
 ```
 
