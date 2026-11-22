@@ -12,7 +12,7 @@
       "name": "tmux-pilot",
       "source": {
         "source": "github",
-        "repo": "plaffitt/tmux-pilot"
+        "repo": "menhirworkshq/tmux-pilot"
       },
       "description": "Lets Claude drive your tmux panes safely, with clear signs of who is typing"
     },

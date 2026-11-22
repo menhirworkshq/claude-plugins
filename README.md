@@ -15,7 +15,7 @@ Claude Code plugins by Menhir Works.
 |---|---|
 | [git-history](plugins/git-history) | Gives a branch a clean history, one change per commit: split mixed commits, regroup reworks, harden a branch before merging |
 | [jargonaut](plugins/jargonaut) | Post-processing for [Vocalinux](https://github.com/VocaHQ/vocalinux) dictation that fixes technical jargon, with your vocabulary and Claude Haiku |
-| [tmux-pilot](https://github.com/plaffitt/tmux-pilot) | Lets Claude drive your tmux panes safely, with clear signs of who is typing |
+| [tmux-pilot](https://github.com/menhirworkshq/tmux-pilot) | Lets Claude drive your tmux panes safely, with clear signs of who is typing |
 
 ## Layout
 
